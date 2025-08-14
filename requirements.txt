@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 google-generativeai
 newspaper3k
@@ -24,6 +24,3 @@ html2text
 dateparser
 langdetect
 cssselect
-polyglot
-pyicu
-pycld2

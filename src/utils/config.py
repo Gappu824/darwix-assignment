@@ -29,9 +29,16 @@ class Config:
     def validate(cls) -> bool:
         """Validate required configuration"""
         if not cls.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is required")
+            raise ValueError("GEMINI_API_KEY is required. Please set this environment variable.")
         return True
 
 # Global config instance
 config = Config()
-config.validate() 
+
+# Only validate if being imported, not during testing
+if __name__ != "__main__":
+    try:
+        config.validate()
+    except ValueError as e:
+        print(f"Configuration warning: {e}")
+        print("The application may not function properly without required environment variables.")

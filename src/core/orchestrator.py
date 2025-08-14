@@ -2,13 +2,13 @@
 
 import asyncio
 import time
-from typing import Optional
+from typing import Optional, List
 
-
-# Assuming these imports are in a parent directory or the path is configured
-from ..models.schemas import (AnalysisResult, AnalysisRequest, ArticleContent,
-                             Claim, RedFlag, LanguageAnalysis, VerificationQuestion,
-                             Entity, SourceMetrics, CounterNarrative)
+from ..models.schemas import (
+    AnalysisResult, AnalysisRequest, ArticleContent,
+    Claim, RedFlag, LanguageAnalysis, VerificationQuestion,
+    Entity, SourceMetrics, CounterNarrative
+)
 from ..models.response_models import AnalysisResponse
 from .scraper import scraper
 from .analyzer import analyzer
@@ -33,17 +33,7 @@ class AnalysisOrchestrator:
         self.counter_narrative_generator = counter_narrative_generator
         self.verification_generator = verification_generator
         self.formatter = formatter
-    def _claims_similar(self, claim1: str, claim2: str) -> bool:
-        """Check if two claims are similar using Jaccard similarity"""
-        words1 = set(claim1.split())
-        words2 = set(claim2.split())
-        
-        intersection = len(words1.intersection(words2))
-        union = len(words1.union(words2))
-        
-        similarity = intersection / union if union > 0 else 0
-        
-        return similarity > 0.6  # 60% similarity threshold
+
     async def analyze_article(self, request: AnalysisRequest) -> AnalysisResponse:
         """Execute complete article analysis pipeline"""
 
@@ -181,7 +171,7 @@ class AnalysisOrchestrator:
                 processing_time=processing_time
             )
 
-    def _merge_claims(self, traditional_claims: list[Claim], ai_claims: list[Claim]) -> list[Claim]:
+    def _merge_claims(self, traditional_claims: List[Claim], ai_claims: List[Claim]) -> List[Claim]:
         """Merge claims from traditional and AI analysis"""
         all_claims = traditional_claims + ai_claims
         unique_claims = []
@@ -201,7 +191,7 @@ class AnalysisOrchestrator:
         # Sort by confidence and return top claims
         return sorted(unique_claims, key=lambda x: x.confidence, reverse=True)[:8]
 
-    def _merge_red_flags(self, traditional_flags: list[RedFlag], ai_flags: list[RedFlag]) -> list[RedFlag]:
+    def _merge_red_flags(self, traditional_flags: List[RedFlag], ai_flags: List[RedFlag]) -> List[RedFlag]:
         """Merge red flags from traditional and AI analysis"""
         all_flags = traditional_flags + ai_flags
         unique_flags = []

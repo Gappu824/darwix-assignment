@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
     chromium \
     pkg-config \
     libicu-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -33,9 +36,10 @@ USER appuser
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PORT=8080
+ENV CHROME_DRIVER_PATH=/usr/bin/chromedriver
 
 # Expose port
 EXPOSE 8080
 
 # Run application
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"] 
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]

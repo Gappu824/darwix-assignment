@@ -63,26 +63,7 @@ class VerificationQuestionGenerator:
                 "Verify quotes by finding the original context"
             ]
         }
-    def _extract_key_subject(self, claim: str) -> str:
-        """Extract the key subject from a claim for rebuttal generation"""
-        
-        # Simple extraction of key nouns (can be improved with NLP)
-        import re
-        
-        # Remove common words and extract potential subjects
-        words = claim.split()
-        
-        # Look for capitalized words (proper nouns) or important keywords
-        subjects = []
-        
-        for word in words:
-            clean_word = re.sub(r'[^\w]', '', word)
-            if (clean_word and
-                (clean_word[0].isupper() or
-                clean_word.lower() in ['economy', 'government', 'policy', 'people', 'study', 'report'])):
-                subjects.append(clean_word.lower())
-        
-        return subjects[0] if subjects else 'the topic'
+
     def generate_verification_questions(self, claims: List[Claim], entities: List[Entity], 
                                       content: str, domain: str) -> List[VerificationQuestion]:
         """Generate comprehensive verification questions"""
@@ -408,4 +389,4 @@ class VerificationQuestionGenerator:
         return sorted(questions, key=lambda q: (q.priority, len(q.research_tips)), reverse=True)
 
 # Global verification question generator instance
-verification_generator = VerificationQuestionGenerator() 
+verification_generator = VerificationQuestionGenerator()

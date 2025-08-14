@@ -10,4 +10,4 @@ __all__ = [
     'claim_extractor', 
     'counter_narrative_generator', 
     'verification_generator'
-] 
+]

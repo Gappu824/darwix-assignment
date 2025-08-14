@@ -13,7 +13,7 @@ from src.core.orchestrator import orchestrator
 from src.utils.config import config
 
 # Configure logging
-logging.basicConfig(level=config.LOG_LEVEL)
+logging.basicConfig(level=getattr(logging, config.LOG_LEVEL, logging.INFO))
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
@@ -228,7 +228,7 @@ async def startup_event():
     # Test Gemini API connection
     try:
         from src.core.analyzer import analyzer
-        logger.info("✅ Gemini API connection verified")
+        logger.info("✅ Gemini API connection configured")
     except Exception as e:
         logger.error(f"❌ Gemini API connection failed: {e}")
 
@@ -246,4 +246,4 @@ if __name__ == "__main__":
         port=8080,
         reload=config.DEBUG,
         log_level=config.LOG_LEVEL.lower()
-    ) 
+    )
