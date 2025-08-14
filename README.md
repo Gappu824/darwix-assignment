@@ -23,7 +23,7 @@ Digital Skeptic AI analyzes news articles for bias, credibility, and logical fal
 
 ## Testing the Application
 
-### 🌐 **Live Deployment**
+### 🌐 **Live Deployment (Recommended for Quick Testing)**
 The application is deployed on Google Cloud Run at:
 ```
 https://darwix-assignment-733137281029.asia-south1.run.app
@@ -31,7 +31,7 @@ https://darwix-assignment-733137281029.asia-south1.run.app
 
 ### 🧪 **Testing Instructions**
 
-#### **Method 1: cURL Commands (Recommended)**
+#### **Method 1: Live Deployment - cURL Commands (Fastest)**
 
 **Health Check:**
 ```bash
@@ -68,23 +68,165 @@ Visit the interactive API documentation:
 https://darwix-assignment-733137281029.asia-south1.run.app/docs
 ```
 
-#### **Method 3: Local Setup**
+#### **Method 3: Local Development Setup**
+
+**Prerequisites:**
+- Python 3.11+
+- Git
+- Your own Gemini API key
+
+**Step-by-Step Local Setup:**
+
+1. **Clone the Repository:**
 ```bash
-# Clone repository
 git clone https://github.com/YOUR_USERNAME/digital-skeptic.git
 cd digital-skeptic
+```
 
-# Install dependencies
+2. **Install Dependencies:**
+```bash
+# Install Python packages
 pip install -r requirements.txt
+
+# Download spaCy language model
 python -m spacy download en_core_web_sm
+```
 
-# Configure environment
+3. **Configure Environment:**
+```bash
+# Copy environment template
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
 
-# Run locally
+# Edit .env file and add your API key
+nano .env
+# or use any text editor to edit .env
+```
+
+4. **Add Your API Key to .env:**
+```bash
+# Required - Get your key from https://makersuite.google.com/app/apikey
+GEMINI_API_KEY=your_actual_gemini_api_key_here
+GOOGLE_CLOUD_PROJECT=your_project_id
+
+# Optional configuration
+DEBUG=True
+LOG_LEVEL=INFO
+REQUEST_TIMEOUT=30
+```
+
+5. **Test Local Installation:**
+```bash
+# Test CLI interface
+python main.py analyze https://www.bbc.com/news/technology
+
+# Test with output file
+python main.py analyze https://www.reuters.com/world/ --output test_report.md
+
+# Check if report was generated
+cat test_report.md
+```
+
+6. **Run Web Server Locally:**
+```bash
+# Start the FastAPI server
 python app.py
-# Test at http://localhost:8080
+
+# Server will start at http://localhost:8080
+# Visit http://localhost:8080/docs for API documentation
+```
+
+7. **Test Local Web API:**
+```bash
+# In a new terminal, test the local API
+
+# Health check
+curl "http://localhost:8080/health"
+
+# Analyze article
+curl -X POST "http://localhost:8080/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.bbc.com/news/technology"}' \
+  | jq -r '.markdown_report'
+
+# Save local analysis
+curl -X POST "http://localhost:8080/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.reuters.com/business/"}' \
+  | jq -r '.markdown_report' > local_analysis.md
+```
+
+#### **Method 4: Docker Local Testing**
+
+1. **Build Docker Image:**
+```bash
+# Build the container
+docker build -t digital-skeptic .
+```
+
+2. **Run Docker Container:**
+```bash
+# Run with environment variables
+docker run -p 8080:8080 \
+  -e GEMINI_API_KEY="your_actual_api_key_here" \
+  -e GOOGLE_CLOUD_PROJECT="your_project_id" \
+  digital-skeptic
+```
+
+3. **Test Docker Deployment:**
+```bash
+# Test the containerized application
+curl "http://localhost:8080/health"
+
+curl -X POST "http://localhost:8080/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.bbc.com/news/world"}' \
+  | jq -r '.markdown_report'
+```
+
+### 🔧 **Troubleshooting Local Setup**
+
+**Common Issues & Solutions:**
+
+1. **Missing API Key:**
+   ```bash
+   # Error: "GEMINI_API_KEY is required"
+   # Solution: Check your .env file has the correct API key
+   cat .env | grep GEMINI_API_KEY
+   ```
+
+2. **spaCy Model Missing:**
+   ```bash
+   # Error: "spaCy English model not found"
+   # Solution: Download the model
+   python -m spacy download en_core_web_sm
+   ```
+
+3. **Dependencies Issues:**
+   ```bash
+   # If pip install fails, try upgrading pip first
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+
+4. **Port Already in Use:**
+   ```bash
+   # If port 8080 is busy, kill existing processes
+   pkill -f "python app.py"
+   # Or use a different port by modifying app.py
+   ```
+
+### 🎯 **Quick Demo Commands**
+
+**For Judges - Copy & Paste Ready:**
+
+**Live Testing (No Setup Required):**
+```bash
+curl -X POST "https://darwix-assignment-733137281029.asia-south1.run.app/analyze" -H "Content-Type: application/json" -d '{"url": "https://www.bbc.com/news/technology"}' | jq -r '.markdown_report' | head -20
+```
+
+**Local Testing (After Setup):**
+```bash
+python main.py analyze https://www.reuters.com/world/ --output demo_report.md && cat demo_report.md
 ```
 
 ## Approach Used to Solve the Problem
@@ -292,4 +434,4 @@ Analysis of tone, bias indicators, loaded language, and persuasive techniques
 ---
 
 **Built for the Darwix AI Hackathon** | **Mission 2: The Digital Skeptic AI**  
-*Demonstrating advanced AI engineering capabilities for conversational intelligence* 
+*Demonstrating advanced AI engineering capabilities for conversational intelligence*
