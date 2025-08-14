@@ -9,6 +9,8 @@ from newspaper import Article
 from bs4 import BeautifulSoup
 import html2text
 import re
+import newspaper
+import html2text
 
 # Optional imports with fallbacks
 try:

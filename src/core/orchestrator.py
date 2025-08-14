@@ -3,6 +3,7 @@
 import asyncio
 import time
 from typing import Optional
+import jaccard
 
 # Assuming these imports are in a parent directory or the path is configured
 from ..models.schemas import (AnalysisResult, AnalysisRequest, ArticleContent,
@@ -32,7 +33,17 @@ class AnalysisOrchestrator:
         self.counter_narrative_generator = counter_narrative_generator
         self.verification_generator = verification_generator
         self.formatter = formatter
-
+    def _claims_similar(self, claim1: str, claim2: str) -> bool:
+        """Check if two claims are similar using Jaccard similarity"""
+        words1 = set(claim1.split())
+        words2 = set(claim2.split())
+        
+        intersection = len(words1.intersection(words2))
+        union = len(words1.union(words2))
+        
+        similarity = intersection / union if union > 0 else 0
+        
+        return similarity > 0.6  # 60% similarity threshold
     async def analyze_article(self, request: AnalysisRequest) -> AnalysisResponse:
         """Execute complete article analysis pipeline"""
 

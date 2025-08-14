@@ -3,6 +3,7 @@
 import asyncio
 from typing import Optional
 from urllib.parse import urlparse
+import requests
 
 from ..models.schemas import ArticleContent
 from ..extraction.content_extractor import extractor

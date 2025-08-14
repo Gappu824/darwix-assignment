@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     chromium-driver \
     chromium \
+    pkg-config \
+    libicu-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory

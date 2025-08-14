@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 import langdetect
 from langdetect.lang_detect_exception import LangDetectException
 
+
 class ContentValidator:
     """Validates extracted content quality and characteristics"""
     
