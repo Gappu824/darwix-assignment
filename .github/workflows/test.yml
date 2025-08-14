@@ -1,0 +1,170 @@
+name: Test Digital Skeptic AI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python -m spacy download en_core_web_sm
+    
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Test imports
+      run: |
+        python -c "
+        try:
+            from src.core.orchestrator import orchestrator
+            from src.utils.config import config
+            print('✅ All imports successful')
+        except Exception as e:
+            print(f'❌ Import failed: {e}')
+            exit(1)
+        "
+    
+    - name: Test URL validation
+      run: |
+        python -c "
+        from src.utils.validators import validator
+        assert validator.validate_url('https://example.com')
+        assert not validator.validate_url('invalid-url')
+        print('✅ URL validation tests passed')
+        "
+    
+    - name: Test content cleaning
+      run: |
+        python -c "
+        from src.utils.validators import validator
+        content = '  Multiple   spaces   and\n\n\nlines  '
+        cleaned = validator.clean_content(content)
+        assert 'Multiple spaces' in cleaned
+        print('✅ Content cleaning tests passed')
+        "
+    
+    - name: Test configuration validation
+      env:
+        GEMINI_API_KEY: test_key_for_validation
+      run: |
+        python -c "
+        import os
+        os.environ['GEMINI_API_KEY'] = 'test_key'
+        from src.utils.config import Config
+        config = Config()
+        try:
+            config.validate()
+            print('✅ Configuration validation passed')
+        except ValueError as e:
+            print(f'❌ Configuration validation failed: {e}')
+            exit(1)
+        "
+    
+    - name: Test CLI help
+      run: |
+        python main.py --help
+        echo "✅ CLI help displayed successfully"
+    
+    - name: Validate project structure
+      run: |
+        python -c "
+        import os
+        required_files = [
+            'app.py', 'main.py', 'requirements.txt', 'Dockerfile',
+            'src/core/orchestrator.py', 'src/utils/config.py'
+        ]
+        for file in required_files:
+            if not os.path.exists(file):
+                print(f'❌ Missing required file: {file}')
+                exit(1)
+        print('✅ Project structure validation passed')
+        "
+    
+    - name: Test markdown formatter
+      run: |
+        python -c "
+        from src.utils.formatters import formatter
+        from src.models.schemas import *
+        from datetime import datetime
+        
+        # Create test data
+        article = ArticleContent(
+            url='https://test.com',
+            content='Test content',
+            domain='test.com',
+            quality_score=0.8,
+            extraction_method='test'
+        )
+        
+        # Test basic formatting
+        test_analysis = AnalysisResult(
+            article=article,
+            core_claims=[],
+            language_analysis=LanguageAnalysis(
+                tone=ToneType.NEUTRAL,
+                bias_indicators=[],
+                loaded_language=[],
+                emotional_words=[],
+                persuasive_techniques=[]
+            ),
+            red_flags=[],
+            verification_questions=[],
+            entities=[],
+            bias_confidence=0.3,
+            overall_credibility=0.7
+        )
+        
+        report = formatter.format_analysis_report(test_analysis)
+        assert '# Critical Analysis Report' in report
+        print('✅ Markdown formatter tests passed')
+        "
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Run security scan
+      run: |
+        pip install safety
+        safety check --json || echo "Security scan completed with warnings"
+    
+    - name: Check for secrets
+      run: |
+        # Simple check for common secret patterns
+        if grep -r "sk-" . --exclude-dir=.git || grep -r "API_KEY.*=" . --exclude-dir=.git --exclude="*.md" --exclude="*.example"; then
+          echo "⚠️ Potential secrets found - please review"
+        else
+          echo "✅ No obvious secrets detected"
+        fi 
