@@ -221,12 +221,12 @@ curl -X POST "http://localhost:8080/analyze" \
 
 **Live Testing (No Setup Required):**
 ```bash
-curl -X POST "https://darwix-assignment-733137281029.asia-south1.run.app/analyze" -H "Content-Type: application/json" -d '{"url": "https://www.bbc.com/news/technology"}' | jq -r '.markdown_report' | head -20
+curl -X POST "https://darwix-assignment-733137281029.asia-south1.run.app/analyze" \ -H "Content-Type: application/json" \ -d '{"url": "https://en.wikipedia.org/wiki/Artificial_intelligence"}' \ | jq -r '.markdown_report'
 ```
 
 **Local Testing (After Setup):**
 ```bash
-python main.py analyze https://www.reuters.com/world/ --output demo_report.md && cat demo_report.md
+python main.py analyze https://en.wikipedia.org/wiki/Artificial_intelligence --output demo_report.md && cat demo_report.md
 ```
 
 ## Approach Used to Solve the Problem
