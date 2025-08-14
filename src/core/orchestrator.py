@@ -3,7 +3,7 @@
 import asyncio
 import time
 from typing import Optional
-import jaccard
+
 
 # Assuming these imports are in a parent directory or the path is configured
 from ..models.schemas import (AnalysisResult, AnalysisRequest, ArticleContent,
