@@ -27,4 +27,3 @@ cssselect
 polyglot
 pyicu
 pycld2
-jaccard
