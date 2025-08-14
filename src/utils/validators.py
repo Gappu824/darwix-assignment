@@ -7,13 +7,12 @@ from urllib.parse import urlparse
 import langdetect
 from langdetect.lang_detect_exception import LangDetectException
 
-
 class ContentValidator:
     """Validates extracted content quality and characteristics"""
     
-    MIN_CONTENT_LENGTH = 500
+    MIN_CONTENT_LENGTH = 200  # Reduced from 500
     MAX_CONTENT_LENGTH = 100000
-    MIN_PARAGRAPHS = 3
+    MIN_PARAGRAPHS = 1  # Reduced from 3
     
     @staticmethod
     def validate_url(url: str) -> bool:
@@ -130,6 +129,9 @@ class ContentValidator:
         has_paragraphs = content.count('\n\n') >= ContentValidator.MIN_PARAGRAPHS
         has_sentences = content.count('.') >= 5
         
+        # Less strict validation - if we have any reasonable content, accept it
+        word_count = len(content.split())
+        
         # Check for common non-article indicators
         non_article_indicators = [
             '404 not found',
@@ -145,7 +147,8 @@ class ContentValidator:
         has_non_article = any(indicator in content_lower 
                              for indicator in non_article_indicators)
         
-        return has_paragraphs and has_sentences and not has_non_article
+        # More lenient validation - accept if we have decent word count and sentences
+        return word_count > 50 and has_sentences and not has_non_article
     
     @staticmethod
     def validate_extraction_result(content: str, url: str, method: str) -> Tuple[bool, str, float]:
@@ -167,4 +170,4 @@ class ContentValidator:
         return True, f"Valid article content extracted via {method}", quality_score
 
 # Global validator instance
-validator = ContentValidator() 
+validator = ContentValidator()

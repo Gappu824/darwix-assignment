@@ -9,8 +9,6 @@ from newspaper import Article
 from bs4 import BeautifulSoup
 import html2text
 import re
-import newspaper
-import html2text
 
 # Optional imports with fallbacks
 try:
@@ -147,17 +145,17 @@ class ContentExtractor:
             print(f"Trafilatura extraction error: {e}")
             return None
     
+    
+            
     async def _extract_with_newspaper(self, url: str) -> Optional[str]:
         """Extract content using newspaper3k"""
         try:
-            # Create article with config directly in constructor
-            from newspaper import Config
-            
-            config_obj = Config()
-            config_obj.browser_user_agent = self.headers['User-Agent']
-            config_obj.request_timeout = config.REQUEST_TIMEOUT
-            
-            article = Article(url, config=config_obj)
+            # Pass configuration directly to the Article constructor
+            config_dict = {
+                'browser_user_agent': self.headers['User-Agent'],
+                'request_timeout': config.REQUEST_TIMEOUT
+            }
+            article = Article(url, config=config_dict)
             
             # Download and parse
             article.download()
@@ -172,7 +170,7 @@ class ContentExtractor:
             
         except Exception as e:
             print(f"Newspaper3k extraction error: {e}")
-            return None
+            return None    
     
     async def _extract_with_readability(self, url: str) -> Optional[str]:
         """Extract content using readability-lxml"""
@@ -492,30 +490,9 @@ class ContentExtractor:
             print(f"Trafilatura extraction error: {e}")
             return None
     
-    async def _extract_with_newspaper(self, url: str) -> Optional[str]:
-        """Extract content using newspaper3k"""
-        try:
-            article = Article(url)
-            article.set_config({
-                'browser_user_agent': self.headers['User-Agent'],
-                'request_timeout': config.REQUEST_TIMEOUT
-            })
-            
-            # Download and parse
-            article.download()
-            article.parse()
-            
-            # Store metadata for later use
-            self._last_title = article.title
-            self._last_author = ", ".join(article.authors) if article.authors else None
-            self._last_date = article.publish_date.isoformat() if article.publish_date else None
-            
-            return article.text
-            
-        except Exception as e:
-            print(f"Newspaper3k extraction error: {e}")
-            return None
     
+            
+       
     async def _extract_with_readability(self, url: str) -> Optional[str]:
         """Extract content using readability-lxml"""
         if not Document:
@@ -774,21 +751,24 @@ class ContentExtractor:
             print(f"Trafilatura extraction error: {e}")
             return None
     
-    async def _extract_with_newspaper(self, url: str) -> Optional[str]:
+    async def _paper(self, url: str) -> Optional[str]:
         """Extract content using newspaper3k"""
         try:
-            article = Article(url)
-            article.set_config({
+            # Pass configuration directly to the Article constructor
+            config_dict = {
                 'browser_user_agent': self.headers['User-Agent'],
                 'request_timeout': config.REQUEST_TIMEOUT
-            })
+            }
+            article = Article(url, config=config_dict)
             
             # Download and parse
             article.download()
             article.parse()
             
             # Store metadata for later use
-            self._last_newspaper_article = article
+            self._last_title = article.title
+            self._last_author = ", ".join(article.authors) if article.authors else None
+            self._last_date = article.publish_date.isoformat() if article.publish_date else None
             
             return article.text
             
