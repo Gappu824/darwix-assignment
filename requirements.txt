@@ -1,4 +1,3 @@
- 
 fastapi
 uvicorn
 pydantic
@@ -25,3 +24,6 @@ html2text
 dateparser
 langdetect
 cssselect
+polyglot
+pyicu
+pycld2

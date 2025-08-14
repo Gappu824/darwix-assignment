@@ -61,6 +61,7 @@ class ContentExtractor:
             ("trafilatura", self._extract_with_trafilatura),
             ("newspaper3k", self._extract_with_newspaper),
             ("beautifulsoup", self._extract_with_beautifulsoup),
+            ("simple_requests", self._extract_with_simple_requests),  # New fallback
         ]
         
         # Add optional extractors if available
@@ -110,23 +111,35 @@ class ContentExtractor:
     async def _extract_with_trafilatura(self, url: str) -> Optional[str]:
         """Extract content using trafilatura (fastest and cleanest)"""
         try:
-            # Download page
-            async with aiohttp.ClientSession(headers=self.headers, timeout=aiohttp.ClientTimeout(total=config.REQUEST_TIMEOUT)) as session:
-                async with session.get(url) as response:
+            # Download page with better error handling
+            timeout = aiohttp.ClientTimeout(total=config.REQUEST_TIMEOUT)
+            async with aiohttp.ClientSession(headers=self.headers, timeout=timeout) as session:
+                async with session.get(url, allow_redirects=True) as response:
                     if response.status != 200:
+                        print(f"HTTP {response.status} for {url}")
                         return None
                     html = await response.text()
             
-            # Extract with trafilatura
+            if not html or len(html) < 100:
+                print("Empty or too short HTML content")
+                return None
+            
+            # Extract with trafilatura - more robust settings
             content = trafilatura.extract(
                 html,
                 include_comments=False,
                 include_tables=True,
                 include_formatting=False,
-                target_language='en'
+                target_language='en',
+                favor_precision=True,
+                favor_recall=False
             )
             
-            return content
+            if content and len(content) > 100:
+                return content
+            else:
+                print(f"Trafilatura extracted insufficient content: {len(content) if content else 0} chars")
+                return None
             
         except Exception as e:
             print(f"Trafilatura extraction error: {e}")
@@ -135,11 +148,14 @@ class ContentExtractor:
     async def _extract_with_newspaper(self, url: str) -> Optional[str]:
         """Extract content using newspaper3k"""
         try:
-            article = Article(url)
-            article.set_config({
-                'browser_user_agent': self.headers['User-Agent'],
-                'request_timeout': config.REQUEST_TIMEOUT
-            })
+            # Create article with config directly in constructor
+            from newspaper import Config
+            
+            config_obj = Config()
+            config_obj.browser_user_agent = self.headers['User-Agent']
+            config_obj.request_timeout = config.REQUEST_TIMEOUT
+            
+            article = Article(url, config=config_obj)
             
             # Download and parse
             article.download()
@@ -310,6 +326,41 @@ class ContentExtractor:
                 
         except Exception as e:
             print(f"Selenium extraction error: {e}")
+            return None
+
+    async def _extract_with_simple_requests(self, url: str) -> Optional[str]:
+        """Simple fallback extraction using just requests and basic text cleaning"""
+        try:
+            async with aiohttp.ClientSession(headers=self.headers, timeout=aiohttp.ClientTimeout(total=config.REQUEST_TIMEOUT)) as session:
+                async with session.get(url, allow_redirects=True) as response:
+                    if response.status != 200:
+                        return None
+                    html = await response.text()
+            
+            if not html:
+                return None
+            
+            # Very basic HTML cleaning
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Remove script and style elements
+            for script in soup(["script", "style", "nav", "header", "footer"]):
+                script.decompose()
+            
+            # Get text and clean it
+            text = soup.get_text()
+            lines = (line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            text = ' '.join(chunk for chunk in chunks if chunk)
+            
+            # Basic validation
+            if len(text) > 200:
+                return text
+            else:
+                return None
+                
+        except Exception as e:
+            print(f"Simple requests extraction error: {e}")
             return None
 
 # Global extractor instance
